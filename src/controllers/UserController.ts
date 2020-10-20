@@ -9,39 +9,62 @@ export class UserController {
 
     const users = await userRepository.find()
 
-    return response.json({ users })
+    return response.json(users)
   }
 
-  async create (request: Request, response: Response): Promise<Response> {
-    const { name, email } = request.body
+  async show (request: Request, response: Response): Promise<Response<User>> {
+    const { id } = request.params
 
     const userRepository = getRepository(User)
 
-    const user = await userRepository.save({
-      name,
-      email
-    })
+    let user: User
+    try {
+      user = await userRepository.findOneOrFail(id)
+    } catch (error) {
+      return response.status(500).json(error)
+    }
 
-    return response.json({ user }).status(201)
+    return response.json(user)
+  }
+
+  async create (request: Request, response: Response): Promise<Response> {
+    const { name, email, password } = request.body
+
+    const userRepository = getRepository(User)
+
+    const user = await userRepository.save(
+      userRepository.create({
+        name,
+        email,
+        password
+      })
+    )
+
+    return response.status(201).json(user)
   }
 
   async update (request: Request, response: Response): Promise<Response> {
     const { id } = request.params
-    const { name, email } = request.body
+    const { name, email, password } = request.body
 
     const userRepository = getRepository(User)
 
-    const user = await userRepository.findOne(id)
+    let user: User
+    try {
+      user = await userRepository.findOneOrFail(id)
+    } catch (error) {
+      return response.status(500).json(error)
+    }
 
     if (!user) {
       return response.status(500)
     }
 
-    Object.assign(user, { name, email })
+    Object.assign(user, { name, email, password })
 
     await userRepository.save(user)
 
-    return response.json({})
+    return response.json()
   }
 
   async delete (request: Request, response: Response): Promise<Response> {
@@ -49,14 +72,19 @@ export class UserController {
 
     const userRepository = getRepository(User)
 
-    const user = await userRepository.findOne(id)
+    let user: User
+    try {
+      user = await userRepository.findOneOrFail(id)
+    } catch (error) {
+      return response.status(500).json(error)
+    }
 
     if (!user) {
       return response.status(500)
     }
 
-    await userRepository.delete(user)
+    await userRepository.remove(user)
 
-    return response.json({})
+    return response.json()
   }
 }
