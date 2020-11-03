@@ -5,57 +5,10 @@ import { ConnectionOptions } from 'typeorm'
 config()
 
 let ormConfig = {} as ConnectionOptions
-const databaseProductionConfiguration = {
-  type: 'mssql',
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD,
-  port: parseInt(process.env.DATABASE_PORT),
-  database: process.env.DATABASE_NAME,
-  logging: false,
-  synchronize: false,
-  dropSchema: false,
-  entities: [
-    join(__dirname, 'src', '**', 'entities', '*.{ts,js}')
-  ],
-  migrations: [
-    join(__dirname, 'src', '**', 'migrations', '*.{ts,js}')
-  ],
-  cli: {
-    entitiesDir: 'src/entities',
-    migrationsDir: 'src/database/migrations'
-  },
-  options: {
-    enableArithAbort: false
-  }
-} as ConnectionOptions
 
-const databaseDevelopmentConfiguration = {
-  type: 'sqlite',
-  database: 'src/database/database.sqlite',
-  logging: true,
-  synchronize: true,
-  dropSchema: true,
-  entities: [
-    join(__dirname, 'src', '**', 'entities', '*.{ts,js}')
-  ],
-  migrations: [
-    join(__dirname, 'src', '**', 'migrations', '*.{ts,js}')
-  ],
-  cli: {
-    entitiesDir: 'src/entities',
-    migrationsDir: 'src/database/migrations'
-  }
-} as ConnectionOptions
-
-if (process.env.NODE_ENV === 'production') {
-  ormConfig = databaseProductionConfiguration
-} else {
-  ormConfig = databaseDevelopmentConfiguration
-}
-/* const ormConfig: ConnectionOptions[] = [
+const ormConfigs: ConnectionOptions[] = [
   {
-    name: 'development',
+    name: process.env.NODE_ENV === 'development' ? 'default' : process.env.NODE_ENV,
     type: 'sqlite',
     database: 'src/database/database.sqlite',
     logging: true,
@@ -73,7 +26,7 @@ if (process.env.NODE_ENV === 'production') {
     }
   },
   {
-    name: 'production',
+    name: process.env.NODE_ENV === 'production' ? 'default' : process.env.NODE_ENV,
     type: 'mssql',
     host: process.env.DATABASE_HOST,
     username: process.env.DATABASE_USERNAME,
@@ -97,6 +50,10 @@ if (process.env.NODE_ENV === 'production') {
       enableArithAbort: false
     }
   }
-] */
+]
+
+ormConfig = ormConfigs.find(function (conf) {
+  return conf.name === 'default'
+})
 
 module.exports = ormConfig
